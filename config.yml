@@ -1,0 +1,17 @@
+default:
+    datawarehouse:
+        driver: 'Postgres'
+        server: 'mydb-test.company.com'
+        uid: 'username'
+        pwd: 'password'
+        port: 5432
+        database: 'sample'
+
+rsconnect:
+    datawarehouse:
+        driver: 'PostgresPro'
+        server: 'prodb.company.com'
+        uid: !expr Sys.getenv("DBUSER")
+        pwd: !expr Sys.getenv("DBPWD")
+        port: 5432
+        database: 'production'

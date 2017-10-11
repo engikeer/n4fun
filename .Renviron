@@ -1,0 +1,5 @@
+R_CONFIG_ACTIVE = "rsconnect"
+uid = "username"
+pwd = "password"
+DBUSER = "AA"
+DBPWD = "AAWD"
