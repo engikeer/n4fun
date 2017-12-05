@@ -1,0 +1,343 @@
+---
+title: "EDA Template"
+author: "Waylon"
+date: "2017/9/15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+# 数据预处理
+## 读取数据
+
+## 检查缺失值
+
+# 探索性分析
+## 基本统计信息
+
+## 单一变量分析
+### 连续型变量
++ 以`mtcars$mpg`为例
+#### 了解变量分布情况
+```{r }
+# 直方图
+## 基础安装
+hist(mtcars$mpg, breaks = 12, col = "red",
+     xlab = "Miles Per Gallon",
+     main="Colored histogram with 12 bins")
+## ggplot2
+ggplot(mtcars, aes(mpg, y = ..density..)) +
+    geom_histogram(bins = 12, color = "black")+
+    geom_density()
+
+# 密度图
+## 基础安装，需要手动计算密度，然后绘制图形
+d <- density(mtcars$mpg)
+plot(d, main="Kernel Density of Miles Per Gallon")
+polygon(d, col="red", border="blue") # 颜色修饰
+# ggplot2
+ggplot(mtcars, aes(mpg)) +
+    geom_density(color = "blue", fill = "red") +
+    ggtitle("Kernel Density of Miles Per Gallon")
+
+# 直方图上叠加密度曲线
+## 基础安装，需要手动计算
+x <- mtcars$mpg
+h<-hist(x,
+        breaks=12,
+        col="red",
+        xlab="Miles Per Gallon",
+        main="Histogram with normal curve and box")
+xfit<-seq(min(x), max(x), length=40)
+yfit<-dnorm(xfit, mean=mean(x), sd=sd(x))
+yfit <- yfit*diff(h$mids[1:2])*length(x)
+lines(xfit, yfit, col="blue", lwd=2)
+## ggplot2，通过density实现，注意，为了比例一致，需要在直方图上也显示密度而不是计数
+ggplot(mtcars, aes(mpg)) +
+    geom_histogram(aes(y = ..density..), bins = 12) +
+    geom_density()
+
+# 箱线图
+## 基础安装
+boxplot(mtcars$mpg, main="Box plot", ylab="Miles per Gallon")
+
+## ggplot2
+ggplot(mtcars, aes(x = factor(1), y = mpg)) +
+    geom_boxplot() +
+    labs(
+        title = "Box plot",
+        x = NULL,
+        y = "Miles per Gallon"
+    )
+
+# 点图
+## 基础安装
+x <- mtcars[order(mtcars$mpg),]
+x$cyl <- factor(x$cyl)
+x$color[x$cyl==4] <- "red"
+x$color[x$cyl==6] <- "blue"
+x$color[x$cyl==8] <- "darkgreen"
+dotchart(x$mpg,
+         labels = row.names(x),
+         cex = .7,
+         groups = x$cyl,
+         gcolor = "black",
+         color = x$color,
+         pch=19,
+         main = "Gas Mileage for Car Models\ngrouped by cylinder",
+         xlab = "Miles Per Gallon")
+
+# 正态概率图
+x <- rnorm(10000)
+## 基础安装
+qqnorm(x)
+qqline(x)
+## ggplot2
+ggplot(tibble(x = x)) +
+    geom_qq(aes(sample = x)) +
+    geom_abline() # 默认斜率为1，截距为0
+
+### 带有qqline的自定义函数
+qqplot_data <- function (vec) # argument: vector of numbers
+{
+  # following four lines from base R's qqline()
+  y <- quantile(vec[!is.na(vec)], c(0.25, 0.75))
+  x <- qnorm(c(0.25, 0.75))
+  slope <- diff(y)/diff(x)
+  int <- y[1L] - slope * x[1L]
+
+  d <- data.frame(resids = vec)
+
+  ggplot(d, aes(sample = resids)) + stat_qq() + geom_abline(slope = slope, intercept = int)
+
+}
+```
+  
+#### 数据分布模式
+
++ 双峰、长尾、
+
+### 类别型变量
++ 以`vcd::Arthritis$Improved`为例
+
+#### 了解变量分布情况
+```{r}
+# 条形图
+## 基础安装
+barplot(table(Arthritis$Improved), main = "Simple bar plot", xlab = "count", ylab = "Improved", horiz = TRUE)
+## ggplot2
+ggplot(Arthritis, aes(Improved)) +
+    geom_bar() +
+    coord_flip() +
+    labs(title = "Simple bar plot") +
+    theme(plot.title = element_text(hjust = 0.5))
+
+# 饼图
+## 基础安装
+pie(table(Arthritis$Improved), col = rainbow(3), main = "Simple Pie Chart")
+## ggplot2
+ggplot(Arthritis, aes(x = factor(1), fill = Improved)) +
+    geom_bar(show.legend = TRUE, width = 1) +
+    coord_polar(theta = "y")
+```
+
+#### 数据分布模式
++ 常见值、异常值、集群
+
+
+### 异常值处理
++ 检测异常值
+
++处理：删除观测、替换为`NA`
+
+## 多变量分析
+
+### 类别型变量对连续型变量的相互作用
+
+```{r }
+# 频率图
+geom_freqpoly( y = ..density..)
+
+# 箱线图
+boxplot(mpg ~ cyl, data=mtcars,
+        main="Car Mileage Data",
+        xlab="Number of Cylinders",
+        ylab="Miles Per Gallon")
+## ggplot2
+ggplot(mtcars, aes(x = factor(cyl), y = mpg)) +
+    geom_boxplot() +
+    labs(
+        title = "Car Mileage Data",
+        x = "Number of Cylinders",
+        y = "Miles Per Gallon"
+    )
+
+# 小提琴图
+## 基础安装
+x1 <- mtcars$mpg[mtcars$cyl==4]
+x2 <- mtcars$mpg[mtcars$cyl==6]
+x3 <- mtcars$mpg[mtcars$cyl==8]
+vioplot(x1, x2, x3,
+        names=c("4 cyl", "6 cyl", "8 cyl"),
+        col="gold")
+title("Violin Plots of Miles Per Gallon", ylab="Miles Per Gallon",
+        xlab="Number of Cylinders")
+## ggplot2
+ggplot(mtcars, aes(x = factor(cyl), y = mpg)) +
+    geom_violin() +
+    labs(
+        title = "Violin Plots of Miles Per Gallon",
+        x = "Number of Cylinders",
+        y = "Miles Per Gallon"
+    )
+
+
+
+# 均值条形图
+states <- data.frame(state.region, state.x77)
+## 基础安装
+means <- aggregate(states$Illiteracy, by=list(state.region), FUN=mean)
+means <- means[order(means$x),]
+barplot(means$x, names.arg=means$Group.1, main = "Mean Illiteracy Rate")
+
+## ggplot2
+means <- states %>%
+    group_by(state.region) %>%
+    summarise(mean = mean(Illiteracy))
+
+### 直接指定y，不进行统计变换。通过scale排序x轴
+means %>%
+    ggplot(aes(x = state.region, y = mean)) +
+    geom_bar(stat = "identity") +
+    scale_x_discrete(limits = means$state.region[order(means$mean)]) +
+    labs(
+        title = "Mean Illiteracy Rate"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5))
+### 或者，指定权重，计数都是1
+means %>%
+    ggplot(aes(x = state.region, weight = mean)) +
+    geom_bar() +
+    scale_x_discrete(limits = means$state.region[order(means$mean)]) +
+    labs(
+        title = "Mean Illiteracy Rate"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5))
+### 或者，通过reorder重排序变量
+means %>%
+    ggplot(aes(x = reorder(state.region, mean), weight = mean)) +
+    geom_bar() +
+    labs(
+        title = "Mean Illiteracy Rate"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5))
+
+# 比较密度图
+## 基础安装
+cyl.f <- factor(mtcars$cyl, levels= c(4,6,8),
+                labels = c("4 cylinder", "6 cylinder",
+                           "8 cylinder"))
+sm::sm.density.compare(mpg, cyl, xlab="Miles Per Gallon")
+title(main="MPG Distribution by Car Cylinders")
+
+## ggplot2
+ggplot(mtcars, aes(mpg, color = factor(cyl))) +
+    geom_density()
+```
+
+### 两个类别型变量的相互作用
+
+```{r }
+# 堆砌条形图
+## 基础安装
+barplot(table(Arthritis$Improved, Arthritis$Treatment),
+         main="Stacked Bar Plot",
+         xlab="Treatment", ylab="Frequency",
+         col=c("red", "yellow","green"),
+         legend=rownames(table(Arthritis$Improved, Arthritis$Treatment)))
+
+## ggplot2
+ggplot(Arthritis) +
+    geom_bar(aes(x = Treatment, fill = Improved)) +
+    labs(
+        title = "Stacked Bar Plot",
+        y = "Frequency"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5))
+
+# 分组条形图
+## 基础安装
+barplot(table(Arthritis$Improved, Arthritis$Treatment),
+         main="Grouped Bar Plot",
+         xlab="Treatment", ylab="Frequency",
+         col=c("red", "yellow", "green"),
+         legend=rownames(table(Arthritis$Improved, Arthritis$Treatment)), beside=TRUE)
+
+## ggplot2
+ggplot(Arthritis) +
+    geom_bar(aes(x =Treatment, fill = Improved), position = 'dodge') +
+    labs(
+        title = "Grouped Bar Plot",
+        y = "Frequency"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5))
+
+# 棘状图
+vcd::spine(with(Arthritis, table(Treatment, Improved)),
+           main = "Spinogram Example")
+## ggplot2
+ggplot(Arthritis, aes(Treatment, fill = Improved)) +
+    geom_bar(position = "fill")
+
+# 处理观测数图
+ggplot(data = diamonds) +
+    geom_count(mapping = aes(x = cut, y = color))
+
+# 马赛克图
+diamonds %>% 
+  count(color, cut) %>%  
+  ggplot(mapping = aes(x = color, y = cut)) +
+    geom_tile(mapping = aes(fill = n))
+```
+
+### 两个连续型变量的关系
+```{r }
+# 散点图
+ggplot(data = diamonds) + 
+  geom_point(mapping = aes(x = carat, y = price), alpha = 1 / 100)
+
+# 方块图或六边形图
+smaller <- diamonds %>% 
+  filter(carat < 3)
+
+# 方块图
+ggplot(data = smaller) +
+  geom_bin2d(mapping = aes(x = carat, y = price))
+
+# install.packages("hexbin")
+
+# 六边形图
+ggplot(data = smaller) +
+  geom_hex(mapping = aes(x = carat, y = price))
+
+# 箱线图
+ggplot(data = smaller, mapping = aes(x = carat, y = price)) + 
+  geom_boxplot(mapping = aes(group = cut_width(carat, 0.1)))
+```
+
+# 多于两个变量
+```{r}
+# 散点图矩阵
+car::scatterplotMatrix(mtcars, spread=FALSE, lty.smooth=2, main="Scatter Plot Matrix")
+```
+
+## 数据的模式
++ 模式是否由巧合导致
++ 如何描述模式隐含的关系
++ 这种关系有多强的影响
++ 还有哪些变量会影响这种关系
++ 在数据集的子集中关系是否仍存在
++ 如果两个变量相关，可以使用一个变量来更好地预测另一个变量。如果这种相关是由于因果关系导致的，可以使用一个变量来控制另一个变量。
+

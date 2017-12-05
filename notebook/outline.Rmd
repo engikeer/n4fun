@@ -1,0 +1,34 @@
+---
+title: "Outline"
+output:
+  html_notebook: default
+---
+```{r setup, include = FALSE}
+library(tidyverse)
+library(stringr)
+knitr::opts_chunk$set(comment = "#>")
+```
++ 用于练习通过tidyverse整理数据
+
+# 数据预览
++ 原始数据如下：
+```{r who, echo=FALSE}
+who
+```
+
+# 整理数据
++ 整理数据的代码：
+```{r tidy_code}
+tidy_who <- who %>%
+    gather(key = "key", value = "cases", new_sp_m014:newrel_f65, na.rm = TRUE) %>%
+    mutate(key = str_replace(key, "newrel", "new_rel")) %>%
+    separate(key, into = c("new", "type", "sexage"), sep = "_") %>%
+    separate(sexage, into = c("sex", "age"), sep = 1) %>%
+    select(-iso2, -iso3, -new) %>%
+    arrange(year)
+```
+
++ 整理结果：
+```{r tidy_who, echo=FALSE}
+tidy_who
+```
