@@ -1,0 +1,13 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(modelr)
+library(nycflights13)
+library(lubridate)
+```
+
+# 钻石
