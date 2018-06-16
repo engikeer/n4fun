@@ -12,10 +12,7 @@ smaller <- diamonds %>%
   filter(carat <= 2.5)
 ```
 
-We have data about `r nrow(diamonds)` diamonds. Only 
-`r nrow(diamonds) - nrow(smaller)` are larger than
-2.5 carats. The distribution of the remainder is shown
-below:
+总共有`r nrow(diamonds)`颗钻石。只有`r nrow(diamonds) - nrow(smaller)`颗的重量大于2.5克拉。其余钻石的分布如下：
 
 ```{r, echo = FALSE}
 smaller %>% 
